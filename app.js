@@ -235,4 +235,6 @@ btnRefresh.addEventListener("click", () => {
 });
 
 setMode("block");
-renderTable();
+setMode("block");
+fetchOverrides();
+
