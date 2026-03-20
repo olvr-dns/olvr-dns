@@ -1,3 +1,4 @@
+const API_BASE = 'http://localhost:3000/api';
 // In-memory overrides store
 let overrides = [];
 let nextId = 1;
