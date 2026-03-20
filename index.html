@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>DNS Control – olvrleb</title>
+  <title>DNS Overrides – olvrleb</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <!-- Geist 300 / 500 -->
@@ -22,14 +22,17 @@
   <header class="topbar">
     <div class="logo">
       <div class="logo-dot"></div>
-      <span class="logo-text">dns.olvrleb.com</span>
+      <div class="logo-text-group">
+        <span class="logo-text-main">olvr-dns</span>
+        <span class="logo-text-sub">olvrleb.com</span>
+      </div>
     </div>
     <nav class="topnav">
-      <button class="nav-btn nav-btn-primary" id="btn-new-override">
-        + New Override
-      </button>
       <button class="nav-btn" id="btn-refresh">
         Refresh
+      </button>
+      <button class="nav-btn nav-btn-primary" id="btn-new-override">
+        + New Override
       </button>
     </nav>
   </header>
@@ -37,24 +40,24 @@
   <main class="main">
     <section class="hero">
       <div class="hero-text">
-        <h1>Domain Overrides, but Pretty.</h1>
+        <h1>DNS Overrides</h1>
         <p>
-          Manage DNS overrides for your world in real time.
-          Fast, glassy, and fully under your control.
+          Central place to define and inspect domain overrides for your network.
         </p>
       </div>
-      <div class="hero-stats">
-        <div class="stat-card">
-          <span class="stat-label">Active Overrides</span>
-          <span class="stat-value" id="stat-overrides">0</span>
+      <div class="hero-meta">
+        <div class="meta-pill">
+          <span class="meta-label">Profile</span>
+          <span class="meta-value">default</span>
         </div>
-        <div class="stat-card">
-          <span class="stat-label">Blocked Domains</span>
-          <span class="stat-value" id="stat-blocked">0</span>
+        <div class="meta-pill">
+          <span class="meta-label">Scope</span>
+          <span class="meta-value">global</span>
         </div>
-        <div class="stat-card">
-          <span class="stat-label">Last Sync</span>
-          <span class="stat-value" id="stat-sync">never</span>
+        <div class="meta-pill">
+          <span class="meta-label">Status</span>
+          <span class="meta-dot"></span>
+          <span class="meta-value" id="meta-status">idle</span>
         </div>
       </div>
     </section>
@@ -62,9 +65,9 @@
     <section class="panel panel-main">
       <header class="panel-header">
         <div>
-          <h2>Overrides</h2>
+          <h2>Domain overrides</h2>
           <p class="panel-subtitle">
-            This is static demo data for now. Later, this will sync with your Technitium instance.
+            Overrides listed here are evaluated before any external DNS lookup.
           </p>
         </div>
         <div class="panel-actions">
@@ -72,10 +75,29 @@
             type="text"
             id="search-input"
             class="search-input"
-            placeholder="Search domains…"
+            placeholder="Filter by domain…"
           />
         </div>
       </header>
+
+      <div class="panel-toolbar">
+        <div class="toolbar-group">
+          <button class="toolbar-btn toolbar-btn-active" data-view="all">
+            All
+          </button>
+          <button class="toolbar-btn" data-view="block">
+            Blocked
+          </button>
+          <button class="toolbar-btn" data-view="override">
+            Overrides
+          </button>
+        </div>
+        <div class="toolbar-group toolbar-group-right">
+          <span class="toolbar-text">
+            <span id="toolbar-count">0</span> overrides
+          </span>
+        </div>
+      </div>
 
       <div class="table-wrapper">
         <table class="table">
@@ -93,17 +115,24 @@
           </tbody>
         </table>
         <div class="empty-state" id="empty-state">
-          <p>No overrides yet. Click “New Override” to add one.</p>
+          <h3>No overrides configured</h3>
+          <p>
+            There aren’t any domain overrides active right now. Add one to
+            force a domain to resolve to a specific address or to block it.
+          </p>
+          <button class="btn-primary" id="empty-add-btn">
+            + Add first override
+          </button>
         </div>
       </div>
     </section>
   </main>
 
-  <!-- New Override Modal -->
+  <!-- Override Modal -->
   <div class="modal-backdrop" id="modal-backdrop">
     <div class="modal">
       <header class="modal-header">
-        <h3>New Override</h3>
+        <h3 id="modal-title">New override</h3>
         <button class="modal-close" id="modal-close">&times;</button>
       </header>
       <div class="modal-body">
@@ -112,7 +141,7 @@
           <input
             type="text"
             id="field-domain"
-            placeholder="example.com"
+            placeholder="domain.tld"
             autocomplete="off"
           />
         </label>
@@ -134,17 +163,35 @@
           <input
             type="text"
             id="field-target"
-            placeholder="192.168.50.199"
+            placeholder="IPv4 address"
             autocomplete="off"
           />
         </label>
 
+        <div class="field field-inline">
+          <label>
+            <span>Apply to</span>
+            <select id="field-scope">
+              <option value="exact">exact domain only</option>
+              <option value="subdomains">domain and subdomains</option>
+            </select>
+          </label>
+          <label>
+            <span>Record type</span>
+            <select id="field-type">
+              <option value="A">A</option>
+              <option value="AAAA">AAAA</option>
+              <option value="CNAME">CNAME</option>
+            </select>
+          </label>
+        </div>
+
         <label class="field">
-          <span>Notes (optional)</span>
+          <span>Label (optional)</span>
           <input
             type="text"
-            id="field-notes"
-            placeholder="Why are you overriding this?"
+            id="field-label"
+            placeholder="Short description"
             autocomplete="off"
           />
         </label>
@@ -152,7 +199,7 @@
       <footer class="modal-footer">
         <button class="btn-secondary" id="btn-cancel">Cancel</button>
         <button class="btn-primary" id="btn-save">
-          Save (demo only)
+          Save override
         </button>
       </footer>
     </div>
