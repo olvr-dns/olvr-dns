@@ -1,5 +1,6 @@
 const API_BASE = 'http://localhost:3000/api';
-// In-memory overrides store
+
+// In-memory overrides cache (synced with backend)
 let overrides = [];
 let nextId = 1;
 
@@ -88,9 +89,15 @@ function renderTable() {
     const btnDelete = document.createElement("button");
     btnDelete.className = "action-btn action-btn--danger";
     btnDelete.textContent = "Delete";
-    btnDelete.addEventListener("click", () => {
-      overrides = overrides.filter((x) => x.id !== o.id);
-      renderTable();
+    btnDelete.addEventListener("click", async () => {
+      try {
+        await fetch(`${API_BASE}/overrides/${o.id}`, { method: 'DELETE' });
+        overrides = overrides.filter((x) => x.id !== o.id);
+        renderTable();
+      } catch (err) {
+        console.error('Delete failed', err);
+        alert('Failed to delete override from backend');
+      }
     });
 
     tdActions.appendChild(btnEdit);
@@ -104,6 +111,18 @@ function renderTable() {
 
     tableBody.appendChild(tr);
   });
+}
+
+async function fetchOverrides() {
+  try {
+    const res = await fetch(`${API_BASE}/overrides`);
+    const data = await res.json();
+    overrides = data.overrides || [];
+    renderTable();
+  } catch (err) {
+    console.error('Failed to load overrides', err);
+    renderTable();
+  }
 }
 
 function setMode(newMode) {
@@ -147,7 +166,7 @@ function closeModal() {
   editingId = null;
 }
 
-function handleSave() {
+async function handleSave() {
   const domain = fieldDomain.value.trim();
   let target = fieldTarget.value.trim();
   const scope = fieldScope.value;
@@ -168,29 +187,31 @@ function handleSave() {
     target = "0.0.0.0";
   }
 
-  if (editingId == null) {
-    overrides.unshift({
-      id: nextId++,
-      domain,
-      type,
-      target,
-      mode: currentMode,
-      scope,
-      label,
-    });
-  } else {
-    const idx = overrides.findIndex((x) => x.id === editingId);
-    if (idx !== -1) {
-      overrides[idx] = {
-        ...overrides[idx],
-        domain,
-        type,
-        target,
-        mode: currentMode,
-        scope,
-        label,
-      };
+  const payload = { domain, type, target, mode: currentMode, scope, label };
+
+  try {
+    if (editingId == null) {
+      const res = await fetch(`${API_BASE}/overrides`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      overrides.unshift({ id: data.id, ...payload });
+    } else {
+      await fetch(`${API_BASE}/overrides/${editingId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const idx = overrides.findIndex((x) => x.id === editingId);
+      if (idx !== -1) {
+        overrides[idx] = { ...overrides[idx], ...payload };
+      }
     }
+  } catch (err) {
+    console.error('Save failed', err);
+    alert('Failed to save override to backend');
   }
 
   closeModal();
@@ -235,6 +256,4 @@ btnRefresh.addEventListener("click", () => {
 });
 
 setMode("block");
-setMode("block");
 fetchOverrides();
-
