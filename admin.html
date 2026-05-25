@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin — olvr's marketplace</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="admin-body">
+
+  <div class="bg-canvas">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+  </div>
+  <div class="grid-overlay"></div>
+
+  <!-- Login -->
+  <div id="login-screen" class="admin-login" style="position:relative;z-index:2">
+    <div class="login-card">
+      <p style="font-size:0.72rem;font-weight:500;letter-spacing:0.18em;text-transform:uppercase;color:var(--accent);margin-bottom:20px">olvr's marketplace</p>
+      <h2>Admin</h2>
+      <p>Enter your password to manage the shop</p>
+      <div class="error-msg" id="login-error">Incorrect password</div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="login-pw" placeholder="Password"
+               onkeydown="if(event.key==='Enter')doLogin()">
+      </div>
+      <button class="btn btn-primary" style="width:100%;margin-top:4px" onclick="doLogin()">Sign in</button>
+    </div>
+  </div>
+
+  <!-- Dashboard -->
+  <div id="dashboard" style="display:none;position:relative;z-index:2">
+
+    <div class="admin-nav">
+      <h1>olvr's marketplace <span style="color:var(--subtle);font-weight:300;font-size:0.85rem">/ admin</span></h1>
+      <div style="display:flex;gap:10px;align-items:center">
+        <a href="shop.html" class="btn btn-sm">View shop</a>
+        <button class="btn btn-sm" onclick="doLogout()">Sign out</button>
+      </div>
+    </div>
+
+    <div class="admin-content">
+
+      <!-- Stats -->
+      <div class="admin-stats" id="admin-stats"></div>
+
+      <!-- Settings -->
+      <div class="admin-section">
+        <h2>Settings</h2>
+        <div class="settings-grid">
+          <div class="form-group">
+            <label>Shop Name</label>
+            <input type="text" id="s-name" placeholder="olvr's marketplace">
+          </div>
+          <div class="form-group">
+            <label>TikTok Username</label>
+            <input type="text" id="s-tiktok" placeholder="olvr">
+          </div>
+          <div class="form-group">
+            <label>Currency Symbol</label>
+            <input type="text" id="s-currency" placeholder="$" style="max-width:80px">
+          </div>
+          <div class="form-group">
+            <label>New Password</label>
+            <input type="password" id="s-pw" placeholder="Leave blank to keep">
+          </div>
+        </div>
+        <div style="margin-top:16px;display:flex;align-items:center;gap:14px">
+          <button class="btn btn-primary" style="width:auto" onclick="saveSettingsForm()">Save settings</button>
+          <span class="saved-msg" id="settings-saved">Saved</span>
+        </div>
+      </div>
+
+      <!-- Add pet -->
+      <div class="admin-section">
+        <h2>Add New Pet</h2>
+        <div class="add-pet-form" id="add-pet-form">
+          <div class="form-group">
+            <label>Name</label>
+            <input type="text" id="np-name" placeholder="Shadow Dragon">
+          </div>
+          <div class="form-group">
+            <label>Rarity</label>
+            <select id="np-rarity">
+              <option value="legendary">Legendary</option>
+              <option value="ultra-rare">Ultra-Rare</option>
+              <option value="rare">Rare</option>
+              <option value="uncommon">Uncommon</option>
+              <option value="common">Common</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Variant</label>
+            <select id="np-variant">
+              <option value="Normal">Normal</option>
+              <option value="R">Ride (R)</option>
+              <option value="FR">Fly Ride (FR)</option>
+              <option value="NFR">Neon FR (NFR)</option>
+              <option value="MFR">Mega NFR (MFR)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Price</label>
+            <input type="number" id="np-price" placeholder="45" min="0" step="0.01">
+          </div>
+          <div class="form-group">
+            <label>Quantity</label>
+            <input type="number" id="np-qty" placeholder="1" min="0">
+          </div>
+          <div class="form-group" style="grid-column:span 2">
+            <label>Image (optional)</label>
+            <div class="img-drop" id="np-drop" onclick="document.getElementById('np-img-input').click()">
+              Click to upload image
+              <img class="img-drop-preview" id="np-preview">
+            </div>
+            <input type="file" id="np-img-input" accept="image/*" style="display:none" onchange="previewNewPet(event)">
+          </div>
+          <div class="form-group" style="display:flex;align-items:flex-end">
+            <button class="btn btn-primary" onclick="addPetForm()" style="white-space:nowrap;width:100%">Add Pet</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pet table -->
+      <div class="admin-section">
+        <h2>Manage Pets</h2>
+        <p style="font-size:0.8rem;font-weight:300;color:var(--muted);margin-bottom:16px">
+          Edits save automatically on blur. Click the image thumbnail to change it.
+        </p>
+        <div style="overflow-x:auto">
+          <table class="pet-table">
+            <thead>
+              <tr>
+                <th>Image</th>
+                <th>Name</th>
+                <th>Rarity</th>
+                <th>Variant</th>
+                <th>Price</th>
+                <th>Qty</th>
+                <th>Visible</th>
+                <th>Delete</th>
+              </tr>
+            </thead>
+            <tbody id="pet-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script src="data.js"></script>
+  <script>
+    let authed = sessionStorage.getItem('adm') === '1';
+    if (authed) showDash();
+
+    async function doLogin() {
+      const pw = document.getElementById('login-pw').value;
+      const s  = getSettings();
+      let match;
+      if (s.adminPasswordHashed) {
+        match = (await hashPassword(pw)) === s.adminPassword;
+      } else {
+        match = pw === s.adminPassword;
+        if (match) {
+          const h = await hashPassword(pw);
+          saveSettings({ ...s, adminPassword: h, adminPasswordHashed: true });
+        }
+      }
+      if (match) {
+        sessionStorage.setItem('adm', '1');
+        authed = true;
+        showDash();
+      } else {
+        document.getElementById('login-error').style.display = 'block';
+        document.getElementById('login-pw').value = '';
+        document.getElementById('login-pw').focus();
+      }
+    }
+
+    function doLogout() {
+      sessionStorage.removeItem('adm');
+      document.getElementById('dashboard').style.display = 'none';
+      document.getElementById('login-screen').style.display = 'flex';
+      document.getElementById('login-pw').value = '';
+      document.getElementById('login-error').style.display = 'none';
+    }
+
+    function showDash() {
+      document.getElementById('login-screen').style.display = 'none';
+      document.getElementById('dashboard').style.display = 'block';
+      loadSettingsForm();
+      renderStats();
+      renderTable();
+    }
+
+    function loadSettingsForm() {
+      const s = getSettings();
+      document.getElementById('s-name').value    = s.shopName;
+      document.getElementById('s-tiktok').value  = s.tiktokUsername;
+      document.getElementById('s-currency').value = s.currency || '$';
+    }
+
+    async function saveSettingsForm() {
+      const cur   = getSettings();
+      const newPw = document.getElementById('s-pw').value;
+      let adminPassword       = cur.adminPassword;
+      let adminPasswordHashed = cur.adminPasswordHashed !== false;
+      if (newPw) {
+        adminPassword       = await hashPassword(newPw);
+        adminPasswordHashed = true;
+      }
+      saveSettings({
+        shopName:            document.getElementById('s-name').value.trim()    || cur.shopName,
+        tiktokUsername:      document.getElementById('s-tiktok').value.trim()  || cur.tiktokUsername,
+        currency:            document.getElementById('s-currency').value.trim() || '$',
+        adminPassword,
+        adminPasswordHashed,
+      });
+      document.getElementById('s-pw').value = '';
+      const msg = document.getElementById('settings-saved');
+      msg.style.display = 'inline';
+      setTimeout(() => msg.style.display = 'none', 2000);
+      renderStats();
+    }
+
+    function renderStats() {
+      const pets  = getPets();
+      const vis   = pets.filter(p => p.visible !== false);
+      const stock = vis.reduce((a,p) => a + (parseInt(p.quantity)||0), 0);
+      const s     = getSettings();
+      document.getElementById('admin-stats').innerHTML = `
+        <div class="a-stat"><div class="a-stat-n">${pets.length}</div><div class="a-stat-l">Listings</div></div>
+        <div class="a-stat"><div class="a-stat-n">${vis.length}</div><div class="a-stat-l">Visible</div></div>
+        <div class="a-stat"><div class="a-stat-n">${stock}</div><div class="a-stat-l">Total Stock</div></div>
+        <div class="a-stat"><div class="a-stat-n" style="font-size:1rem;word-break:break-all">@${s.tiktokUsername}</div><div class="a-stat-l">TikTok</div></div>`;
+    }
+
+    function esc(s) {
+      return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    function renderTable() {
+      const pets = getPets();
+      document.getElementById('pet-tbody').innerHTML = pets.map(pet => {
+        const vis = pet.visible !== false;
+        const thumbHtml = pet.image
+          ? `<img src="${pet.image}" class="pet-thumb" id="thumb-${pet.id}" alt="">`
+          : `<div class="pet-thumb-placeholder" id="thumb-${pet.id}">${(pet.name||'?').charAt(0).toUpperCase()}</div>`;
+        return `
+          <tr id="row-${pet.id}">
+            <td>
+              <div class="img-cell">
+                <label for="img-inp-${pet.id}" style="cursor:pointer" title="Click to change image">${thumbHtml}</label>
+                <div>
+                  <label class="img-upload-label" for="img-inp-${pet.id}">Change</label>
+                  ${pet.image?`<br><button class="img-upload-label" style="margin-top:4px;border:none;background:rgba(239,68,68,0.12);color:#FCA5A5;cursor:pointer" onclick="removeImg(${pet.id})">Remove</button>`:''}
+                </div>
+                <input type="file" id="img-inp-${pet.id}" accept="image/*" style="display:none"
+                       onchange="handleImg(event,${pet.id})">
+              </div>
+            </td>
+            <td><input class="table-input" style="min-width:130px" value="${esc(pet.name)}"
+                  onchange="sv(${pet.id},'name',this.value)"></td>
+            <td>
+              <select class="table-select" onchange="sv(${pet.id},'rarity',this.value)">
+                ${['legendary','ultra-rare','rare','uncommon','common'].map(r=>
+                  `<option value="${r}"${pet.rarity===r?' selected':''}>${r.charAt(0).toUpperCase()+r.slice(1)}</option>`
+                ).join('')}
+              </select>
+            </td>
+            <td>
+              <select class="table-select" onchange="sv(${pet.id},'variant',this.value)">
+                ${['Normal','R','FR','NFR','MFR'].map(v=>
+                  `<option value="${v}"${pet.variant===v?' selected':''}>${v}</option>`
+                ).join('')}
+              </select>
+            </td>
+            <td><input class="table-input" type="number" style="width:80px" value="${pet.price}" min="0" step="0.01"
+                  onchange="sv(${pet.id},'price',parseFloat(this.value)||0)"></td>
+            <td><input class="table-input" type="number" style="width:66px" value="${pet.quantity}" min="0"
+                  onchange="sv(${pet.id},'quantity',parseInt(this.value)||0)"></td>
+            <td>
+              <button class="toggle-vis ${vis?'on':'off'}" id="vis-${pet.id}"
+                      onclick="toggleVis(${pet.id})">${vis?'Visible':'Hidden'}</button>
+            </td>
+            <td>
+              <button class="btn btn-danger btn-sm" onclick="rmPet(${pet.id})">Delete</button>
+            </td>
+          </tr>`;
+      }).join('');
+    }
+
+    function sv(id, field, value) {
+      updatePet(id, { [field]: value });
+      renderStats();
+    }
+
+    function handleImg(e, id) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = ev => {
+        updatePet(id, { image: ev.target.result });
+        const thumb = document.getElementById('thumb-' + id);
+        if (thumb) {
+          const img = document.createElement('img');
+          img.src = ev.target.result;
+          img.className = 'pet-thumb';
+          img.id = 'thumb-' + id;
+          img.alt = '';
+          thumb.replaceWith(img);
+        }
+        renderTable();
+        renderStats();
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function removeImg(id) {
+      updatePet(id, { image: '' });
+      renderTable();
+    }
+
+    function toggleVis(id) {
+      const pet = getPets().find(p => p.id === id);
+      if (!pet) return;
+      const nv = pet.visible === false;
+      updatePet(id, { visible: nv });
+      const btn = document.getElementById('vis-' + id);
+      if (btn) { btn.className = 'toggle-vis ' + (nv?'on':'off'); btn.textContent = nv?'Visible':'Hidden'; }
+      renderStats();
+    }
+
+    function rmPet(id) {
+      const pet = getPets().find(p => p.id === id);
+      if (!pet || !confirm(`Delete "${pet.name}"?`)) return;
+      deletePet(id);
+      document.getElementById('row-' + id)?.remove();
+      renderStats();
+    }
+
+    let newPetImage = '';
+    function previewNewPet(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = ev => {
+        newPetImage = ev.target.result;
+        const prev = document.getElementById('np-preview');
+        prev.src = newPetImage; prev.style.display = 'block';
+        document.getElementById('np-drop').textContent = '';
+        document.getElementById('np-drop').appendChild(prev);
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function addPetForm() {
+      const name = document.getElementById('np-name').value.trim();
+      if (!name) { alert('Please enter a pet name.'); return; }
+      addPet({
+        name,
+        rarity:   document.getElementById('np-rarity').value,
+        variant:  document.getElementById('np-variant').value,
+        price:    parseFloat(document.getElementById('np-price').value) || 0,
+        quantity: parseInt(document.getElementById('np-qty').value)     || 0,
+        image:    newPetImage,
+      });
+      ['np-name','np-price','np-qty'].forEach(id => document.getElementById(id).value = '');
+      document.getElementById('np-rarity').value  = 'legendary';
+      document.getElementById('np-variant').value = 'Normal';
+      document.getElementById('np-img-input').value = '';
+      document.getElementById('np-drop').innerHTML = 'Click to upload image<img class="img-drop-preview" id="np-preview">';
+      newPetImage = '';
+      renderTable();
+      renderStats();
+    }
+  </script>
+</body>
+</html>
